@@ -1,10 +1,12 @@
+import copy
+from collections import defaultdict
 from typing import Literal
 
 
 class Ingredient:
     def __init__(self, name: str, quantity: float, unit: Literal["г", "кг", "мл", "шт"]) -> None:
         self.name = name
-        self.__quantity = float(quantity)
+        self.quantity = float(quantity)
         self.unit = unit
 
     @property
@@ -65,3 +67,39 @@ class Recipe:
 
     def __str__(self):
         return self.title + "\n" + "\n".join(str(ingredient) for ingredient in self.ingredients)
+
+class ShoppingList:
+    def __init__(self) -> None:
+        self._items: list[tuple[Ingredient, str]] = []
+
+    def add_recipe(self, recipe: Recipe, portions: float) -> None:
+        if portions <= 0:
+            raise ValueError("Количество порций должно быть положительным")
+        recipe = recipe.scale(portions)
+        self._items.extend((ingredient, recipe.title) for ingredient in recipe.ingredients)
+
+    def remove_recipe(self, title: str) -> None:
+        self._items = [(ing, t) for ing, t in self._items if t != title]
+
+
+
+    def get_list(self) -> list[Ingredient]:
+        totals = defaultdict(float)
+
+        for ingredient, _ in self._items:
+            key = (ingredient.name, ingredient.unit)
+            totals[key] += ingredient.quantity
+
+        ingredients = [
+            Ingredient(name, quantity, unit)
+            for (name, unit), quantity in totals.items()
+        ]
+
+        return sorted(ingredients, key=lambda ing: ing.name)
+
+    def __add__(self, other: "ShoppingList") -> "ShoppingList":
+        if not isinstance(other, ShoppingList):
+            raise TypeError("Can combine only with ShoppingList")
+        new_list = ShoppingList()
+        new_list._items = copy.deepcopy(self._items) + copy.deepcopy(other._items)
+        return new_list
