@@ -81,3 +81,84 @@ def test_recipe_len():
 
     recipe = Recipe("Кротовуха", [ing1, ing2, ing3])
     assert len(recipe) == 2
+
+
+def test_shopping_list_add_recipe():
+    recipe = Recipe("Кротовуха", [Ingredient("Крот", 1.0, "шт")])
+    sl = ShoppingList()
+
+    sl.add_recipe(recipe, portions=2.0)
+    assert len(sl._items) == 1
+    assert sl._items[0][0].quantity == 2.0
+    assert sl._items[0][1] == "Кротовуха"
+
+    with pytest.raises(ValueError, match="Количество порций должно быть положительным"):
+        sl.add_recipe(recipe, portions=0)
+
+    with pytest.raises(ValueError, match="Количество порций должно быть положительным"):
+        sl.add_recipe(recipe, portions=-1)
+
+
+def test_shopping_list_remove_recipe():
+    recipe1 = Recipe("Кротовуха", [Ingredient("Крот", 1.0, "шт")])
+    recipe2 = Recipe("Бой киббл", [Ingredient("Рис", 1.0, "кг"), Ingredient("Курица", 500.0, "г")])
+    sl = ShoppingList()
+
+    sl.add_recipe(recipe1, 1.0)
+    sl.add_recipe(recipe2, 1.0)
+    assert len(sl._items) == 3
+
+    sl.remove_recipe("Кротовуха")
+    assert len(sl._items) == 2
+    assert sl._items[0][1] == "Бой киббл"
+
+    sl.remove_recipe("Суп")
+    assert len(sl._items) == 2
+
+
+def test_shopping_list_get_list():
+    recipe1 = Recipe("Кротовуха", [Ingredient("Крот", 1.0, "шт")])
+    recipe2 = Recipe("Бамбл Кротовуха", [Ingredient("Крот", 1.0, "шт"), Ingredient("Манго", 300.0, "г")])
+
+    sl = ShoppingList()
+    sl.add_recipe(recipe1, 1.0)
+    sl.add_recipe(recipe2, 1.0)
+
+    result = sl.get_list()
+
+    assert len(result) == 2
+
+    mole = next((ing for ing in result if ing.name == "Крот"), None)
+    assert mole is not None
+    assert mole.quantity == 2.0
+    assert mole.unit == "шт"
+
+    mango = next((ing for ing in result if ing.name == "Манго"), None)
+    assert mango is not None
+    assert mango.quantity == 300.0
+    assert mango.unit == "г"
+
+    assert result[0].name == "Крот"
+    assert result[1].name == "Манго"
+
+
+def test_shopping_list_add():
+    recipe1 = Recipe("Кротовуха", [Ingredient("Крот", 1.0, "шт")])
+    recipe2 = Recipe("Бамбл Кротовуха", [Ingredient("Крот", 1.0, "шт"), Ingredient("Манго", 300.0, "г")])
+
+    sl1 = ShoppingList()
+    sl1.add_recipe(recipe1, 1.0)
+
+    sl2 = ShoppingList()
+    sl2.add_recipe(recipe2, 1.0)
+
+    sl3 = sl1 + sl2
+
+    assert len(sl3._items) == 3
+
+    assert len(sl1._items) == 1
+    assert len(sl2._items) == 2
+
+    names_in_sl3 = [item[0].name for item in sl3._items]
+    assert names_in_sl3.count("Крот") == 2
+    assert "Манго" in names_in_sl3
