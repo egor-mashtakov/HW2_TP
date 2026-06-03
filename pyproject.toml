@@ -1,0 +1,8 @@
+[project]
+name = "tp-hw2"
+version = "0.1.0"
+description = "HW2 in TP course of Egor Mashtakov"
+requires-python = ">=3.10"
+dependencies = [
+    "pytest>=9.0.3",
+]
