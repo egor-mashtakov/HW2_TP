@@ -1,6 +1,6 @@
 import copy
 from collections import defaultdict
-from typing import Literal
+from typing import Literal, Optional
 
 
 class Ingredient:
@@ -103,3 +103,15 @@ class ShoppingList:
         new_list = ShoppingList()
         new_list._items = copy.deepcopy(self._items) + copy.deepcopy(other._items)
         return new_list
+
+class DietaryRecipe(Recipe):
+    def __init__(self, title: str, diet_type: str, ingredients: Optional[list[Ingredient]] = []) -> None:
+        super().__init__(title, ingredients)
+        self.diet_type=diet_type
+
+    def scale(self, ratio: float):
+        scaled = super().scale(ratio)
+        return DietaryRecipe(self.title, self.diet_type, scaled.ingredients)
+
+    def __str__(self):
+        return f"[{self.diet_type}] {super().__str__()}"
